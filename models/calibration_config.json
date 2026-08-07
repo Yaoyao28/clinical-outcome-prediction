@@ -1,0 +1,19 @@
+{
+  "base_model_name": "Random Forest",
+  "selected_calibration_method": "Isotonic",
+  "selection_dataset": "validation",
+  "primary_selection_metric": "Brier score",
+  "secondary_selection_metric": "log loss",
+  "selection_reason": "Lowest validation Brier score, with log loss used as the tie-breaker.",
+  "validation_brier_score": 0.033333333333334034,
+  "validation_log_loss": 0.0954771337442234,
+  "validation_auroc": 0.9583333333333333,
+  "validation_auprc": 0.75,
+  "validation_positive_count": 2,
+  "validation_negative_count": 18,
+  "isotonic_small_sample_warning": true,
+  "default_threshold": 0.5,
+  "test_set_used_for_selection": false,
+  "final_test_evaluated_after_freeze": true,
+  "random_state": 42
+}

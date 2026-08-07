@@ -1,0 +1,9 @@
+,value
+rows,128.0
+unique_patients,100.0
+unique_admissions,128.0
+unique_icu_stays,128.0
+deaths,15.0
+mortality_rate,0.1171875
+minimum_age,21.0
+maximum_age,91.0

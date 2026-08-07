@@ -1,0 +1,6 @@
+review_capacity_percentage,patients_reviewed,deaths_captured,total_deaths,death_capture_rate,precision_among_reviewed,false_alerts_among_reviewed
+0.05,1,0,2,0.0,0.0,1
+0.1,2,1,2,0.5,0.5,1
+0.2,4,1,2,0.5,0.25,3
+0.3,6,1,2,0.5,0.16666666666666666,5
+0.5,10,1,2,0.5,0.1,9

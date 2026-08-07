@@ -1,0 +1,5 @@
+{
+  "selection_dataset": "validation",
+  "selection_rule": "highest F1 score",
+  "selected_threshold": 0.1
+}

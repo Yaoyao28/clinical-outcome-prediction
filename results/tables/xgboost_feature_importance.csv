@@ -1,0 +1,141 @@
+feature,importance
+numeric__missingindicator_lactate_first,0.0631621
+numeric__map_mean,0.062258195
+numeric__bun_first,0.055478435
+numeric__lactate_min,0.04259296
+categorical__first_careunit_Surgical Intensive Care Unit (SICU),0.042002447
+numeric__creatinine_max,0.03876413
+numeric__anchor_age,0.036640387
+numeric__bicarbonate_max,0.034865636
+numeric__bicarbonate_first,0.03295022
+numeric__emergency_admission,0.03214334
+numeric__creatinine_min,0.03205422
+numeric__bicarbonate_min,0.030182507
+numeric__temperature_c_max,0.027657455
+numeric__platelets_first,0.025704555
+numeric__platelets_min,0.02539903
+categorical__gender_F,0.02440793
+numeric__icu_admission_hour,0.021252044
+numeric__platelets_max,0.02065773
+numeric__creatinine_first,0.02061394
+numeric__wbc_max,0.020172246
+numeric__sodium_max,0.02012535
+numeric__lactate_max,0.018838288
+numeric__hemoglobin_min,0.018078258
+numeric__potassium_min,0.01778975
+numeric__potassium_first,0.015969923
+numeric__temperature_c_mean,0.015551621
+numeric__sbp_max,0.0145772025
+categorical__marital_status_MARRIED,0.014011191
+numeric__glucose_first,0.013318273
+numeric__sodium_first,0.0127856
+numeric__map_max,0.012630912
+numeric__wbc_min,0.011437619
+numeric__hemoglobin_first,0.010613779
+numeric__sbp_min,0.009970343
+categorical__gender_M,0.009957139
+numeric__heart_rate_mean,0.009949138
+numeric__potassium_max,0.009318496
+numeric__heart_rate_max,0.008732425
+numeric__lactate_first,0.008188457
+numeric__respiratory_rate_mean,0.007588874
+numeric__missingindicator_bilirubin_total_min,0.0068925885
+numeric__temperature_c_min,0.0063554468
+numeric__respiratory_rate_max,0.0058404137
+numeric__heart_rate_min,0.0056480924
+numeric__glucose_max,0.005460232
+numeric__spo2_min,0.0053369384
+numeric__spo2_mean,0.004137073
+numeric__missingindicator_bilirubin_total_first,0.0032918258
+numeric__glucose_min,0.0032623063
+numeric__sodium_min,0.002467525
+numeric__bun_min,0.0014870282
+numeric__map_min,0.0010848239
+numeric__bun_max,0.0003435408
+numeric__respiratory_rate_min,0.0
+numeric__weekend_admission,0.0
+numeric__transfer_admission,0.0
+numeric__albumin_max,0.0
+numeric__sbp_mean,0.0
+numeric__wbc_first,0.0
+numeric__bilirubin_total_first,0.0
+numeric__missingindicator_sbp_mean,0.0
+numeric__missingindicator_map_min,0.0
+numeric__missingindicator_map_max,0.0
+numeric__missingindicator_map_mean,0.0
+numeric__missingindicator_temperature_c_min,0.0
+numeric__missingindicator_temperature_c_max,0.0
+numeric__missingindicator_temperature_c_mean,0.0
+numeric__missingindicator_creatinine_first,0.0
+numeric__missingindicator_creatinine_min,0.0
+numeric__albumin_min,0.0
+numeric__albumin_first,0.0
+numeric__bilirubin_total_max,0.0
+numeric__bilirubin_total_min,0.0
+numeric__hemoglobin_max,0.0
+numeric__missingindicator_sbp_min,0.0
+numeric__missingindicator_sbp_max,0.0
+numeric__missingindicator_glucose_max,0.0
+numeric__missingindicator_glucose_min,0.0
+numeric__missingindicator_glucose_first,0.0
+numeric__missingindicator_bun_max,0.0
+numeric__missingindicator_bun_min,0.0
+numeric__missingindicator_bun_first,0.0
+numeric__missingindicator_creatinine_max,0.0
+numeric__missingindicator_platelets_min,0.0
+numeric__missingindicator_lactate_min,0.0
+numeric__missingindicator_platelets_max,0.0
+numeric__missingindicator_lactate_max,0.0
+numeric__missingindicator_bilirubin_total_max,0.0
+numeric__missingindicator_albumin_first,0.0
+numeric__missingindicator_albumin_min,0.0
+numeric__missingindicator_platelets_first,0.0
+numeric__missingindicator_wbc_first,0.0
+numeric__missingindicator_bicarbonate_first,0.0
+numeric__missingindicator_albumin_max,0.0
+numeric__missingindicator_bicarbonate_min,0.0
+numeric__missingindicator_bicarbonate_max,0.0
+numeric__missingindicator_hemoglobin_min,0.0
+numeric__missingindicator_hemoglobin_first,0.0
+numeric__missingindicator_hemoglobin_max,0.0
+categorical__admission_type_DIRECT EMER.,0.0
+categorical__admission_type_ELECTIVE,0.0
+categorical__admission_type_EW EMER.,0.0
+categorical__admission_type_OBSERVATION ADMIT,0.0
+categorical__admission_type_SURGICAL SAME DAY ADMISSION,0.0
+categorical__admission_type_URGENT,0.0
+categorical__admission_location_CLINIC REFERRAL,0.0
+numeric__missingindicator_wbc_max,0.0
+numeric__missingindicator_wbc_min,0.0
+categorical__admission_location_INFORMATION NOT AVAILABLE,0.0
+categorical__admission_location_EMERGENCY ROOM,0.0
+categorical__admission_location_PROCEDURE SITE,0.0
+categorical__admission_location_PACU,0.0
+categorical__admission_location_TRANSFER FROM SKILLED NURSING FACILITY,0.0
+categorical__insurance_Medicaid,0.0
+categorical__insurance_Medicare,0.0
+categorical__admission_location_PHYSICIAN REFERRAL,0.0
+categorical__insurance_Other,0.0
+categorical__marital_status_DIVORCED,0.0
+categorical__marital_status_SINGLE,0.0
+categorical__marital_status_WIDOWED,0.0
+categorical__race_BLACK/AFRICAN AMERICAN,0.0
+categorical__race_BLACK/CAPE VERDEAN,0.0
+categorical__race_HISPANIC/LATINO - CUBAN,0.0
+categorical__admission_location_TRANSFER FROM HOSPITAL,0.0
+categorical__race_HISPANIC/LATINO - PUERTO RICAN,0.0
+categorical__race_HISPANIC/LATINO - SALVADORAN,0.0
+categorical__race_PATIENT DECLINED TO ANSWER,0.0
+categorical__race_OTHER,0.0
+categorical__race_UNABLE TO OBTAIN,0.0
+categorical__race_UNKNOWN,0.0
+categorical__race_WHITE,0.0
+categorical__race_PORTUGUESE,0.0
+categorical__race_WHITE - OTHER EUROPEAN,0.0
+categorical__first_careunit_Cardiac Vascular Intensive Care Unit (CVICU),0.0
+categorical__first_careunit_Medical Intensive Care Unit (MICU),0.0
+categorical__first_careunit_Coronary Care Unit (CCU),0.0
+categorical__first_careunit_Medical/Surgical Intensive Care Unit (MICU/SICU),0.0
+categorical__first_careunit_Neuro Intermediate,0.0
+categorical__first_careunit_Neuro Surgical Intensive Care Unit (Neuro SICU),0.0
+categorical__first_careunit_Trauma SICU (TSICU),0.0

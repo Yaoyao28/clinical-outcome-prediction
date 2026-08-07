@@ -1,0 +1,141 @@
+feature,mean_absolute_shap,importance_rank,random_forest_builtin_importance,rf_builtin_rank,rank_difference
+numeric__creatinine_min,0.028429104674745184,1,0.05986449874620539,1,0
+numeric__creatinine_first,0.027913941393995344,2,0.05152568754257402,2,0
+numeric__creatinine_max,0.02101661330727085,3,0.042131614365249495,3,0
+numeric__icu_admission_hour,0.020850133468592713,4,0.04106908600755771,4,0
+numeric__bicarbonate_first,0.01929068463407606,5,0.04087506198028769,5,0
+numeric__anchor_age,0.013831015551069354,6,0.030774324783085255,7,-1
+numeric__bun_first,0.013234410663399813,7,0.03097546895471331,6,1
+numeric__bun_max,0.011708430812602559,8,0.029121294669426114,10,-2
+numeric__potassium_first,0.011603348240020269,9,0.030191677153855182,8,1
+numeric__lactate_first,0.011600329346410332,10,0.021155501048795076,16,-6
+numeric__potassium_min,0.01062147322786518,11,0.02453755231879711,13,-2
+numeric__bicarbonate_max,0.009995678162295957,12,0.02500069273631387,12,0
+numeric__bun_min,0.009881686583946248,13,0.029232823073711996,9,4
+categorical__gender_F,0.00965767910416273,14,0.01841404894951036,21,-7
+categorical__gender_M,0.0095279108147753,15,0.0184725766370853,20,-5
+numeric__map_max,0.00941257391273006,16,0.022630651267832647,14,2
+numeric__lactate_max,0.009347087235698062,17,0.020728886173187872,19,-2
+numeric__sodium_first,0.009233652038906871,18,0.01522624987919421,23,-5
+numeric__platelets_first,0.009046390454842054,19,0.025528226927579358,11,8
+numeric__platelets_max,0.00881659697288105,20,0.022356812829636766,15,5
+numeric__missingindicator_lactate_min,0.008505227021877297,21,0.013184193168719476,28,-7
+numeric__potassium_max,0.008009424550460578,22,0.02088862166752214,18,4
+numeric__sbp_max,0.007784703775443508,23,0.015160012028406266,25,-2
+numeric__temperature_c_mean,0.007558393546735259,24,0.021148444686006122,17,7
+numeric__wbc_max,0.006770737170625175,25,0.014735285001171232,27,-2
+numeric__missingindicator_lactate_first,0.006758589461250126,26,0.010689836098666644,33,-7
+numeric__temperature_c_max,0.006236251843744778,27,0.01189828114236478,30,-3
+numeric__wbc_min,0.00618736225704976,28,0.016115833549964976,22,6
+numeric__missingindicator_lactate_max,0.005960308476092997,29,0.009705586164706102,35,-6
+categorical__marital_status_MARRIED,0.005810380483078267,30,0.008424005398400467,40,-10
+numeric__temperature_c_min,0.0054280149738537556,31,0.014925906990345902,26,5
+numeric__sodium_max,0.004963104928538568,32,0.010273147663084617,34,-2
+numeric__glucose_first,0.004695506646986572,33,0.010878491011043942,32,1
+numeric__wbc_first,0.0044143671169772246,34,0.015176759148366763,24,10
+numeric__lactate_min,0.004396466266761552,35,0.011580973891313929,31,4
+numeric__bicarbonate_min,0.004195532142371942,36,0.011952941162371424,29,7
+numeric__missingindicator_bilirubin_total_max,0.004029835053674559,37,0.0070749916688372435,47,-10
+numeric__emergency_admission,0.0037023183660603895,38,0.005715003969990577,53,-15
+categorical__insurance_Other,0.002924324875455353,39,0.0041017214275344115,56,-17
+numeric__sbp_min,0.0026683449786926035,40,0.008307105594709324,41,-1
+numeric__heart_rate_mean,0.0026126636114981623,41,0.009537284383234085,37,4
+numeric__hemoglobin_max,0.0023987699044241777,42,0.009680166486550167,36,6
+numeric__sodium_min,0.002104028593737897,43,0.007439559585173024,46,-3
+numeric__respiratory_rate_min,0.0020312535703842227,44,0.007715990487306954,44,0
+categorical__first_careunit_Cardiac Vascular Intensive Care Unit (CVICU),0.0020183981053638104,45,0.003098770464817077,59,-14
+numeric__glucose_max,0.0017458910476793909,46,0.008040573804382412,42,4
+categorical__insurance_Medicare,0.0017127336390702949,47,0.002792918391578818,60,-13
+numeric__missingindicator_bilirubin_total_min,0.0016987612247627746,48,0.002500340655422343,62,-14
+numeric__spo2_min,0.0016985649524733023,49,0.0035354887800805625,58,-9
+numeric__platelets_min,0.0016871341046237138,50,0.008606307030097411,38,12
+numeric__hemoglobin_first,0.0016775621127453387,51,0.00775572539834505,43,8
+categorical__admission_location_EMERGENCY ROOM,0.0016191568762744751,52,0.002388767038792668,64,-12
+numeric__missingindicator_bilirubin_total_first,0.0015142413564468312,53,0.002275464733042602,65,-12
+numeric__map_min,0.0012935132259255403,54,0.0066792708978478,48,6
+numeric__respiratory_rate_mean,0.0012770351289933771,55,0.005984043176475405,52,3
+numeric__sbp_mean,0.0012322935898513414,56,0.00612509179581985,51,5
+numeric__glucose_min,0.0012241149263983008,57,0.00757831558515868,45,12
+numeric__weekend_admission,0.001178955996676534,58,0.001983697264915089,67,-9
+numeric__map_mean,0.0011602263451472882,59,0.0056619860503235924,54,5
+numeric__bilirubin_total_max,0.0010757808050038287,60,0.0024684381562620665,63,-3
+numeric__hemoglobin_min,0.0010675210450390156,61,0.006353319364949295,50,11
+numeric__spo2_mean,0.001044673016486074,62,0.0066658205438698956,49,13
+numeric__bilirubin_total_first,0.001032188715211394,63,0.002704628818889943,61,2
+numeric__heart_rate_max,0.001023640771013216,64,0.00515768854166391,55,9
+numeric__respiratory_rate_max,0.0010229356482870384,65,0.0085085123329288,39,26
+categorical__admission_type_EW EMER.,0.0009990515097941517,66,0.0013288374267992433,68,-2
+numeric__heart_rate_min,0.0009668217354210357,67,0.003838532128159159,57,10
+numeric__albumin_first,0.0006721580312093885,68,0.0012695396815915778,69,-1
+numeric__missingindicator_albumin_first,0.0006080099436325644,69,0.0011263917765070982,70,-1
+categorical__first_careunit_Surgical Intensive Care Unit (SICU),0.0005935328609745895,70,0.000997933136060502,72,-2
+categorical__marital_status_SINGLE,0.0005582325083690804,71,0.000776180320307439,74,-3
+categorical__race_UNKNOWN,0.00046517708759760755,72,0.0007933779235141122,73,-1
+numeric__missingindicator_albumin_max,0.0004444526129968329,73,0.0020769908103102025,66,7
+categorical__admission_location_TRANSFER FROM HOSPITAL,0.00031259550587286257,74,0.0004938736872891667,76,-2
+numeric__missingindicator_albumin_min,0.00027633898789480193,75,0.00036734405988979844,80,-5
+categorical__race_WHITE,0.00026930167769179976,76,0.001098752608216571,71,5
+categorical__admission_type_SURGICAL SAME DAY ADMISSION,0.00020447041122909128,77,0.00039589290217486927,78,-1
+numeric__albumin_min,0.00019857835772888426,78,0.000753714064301136,75,3
+categorical__admission_type_URGENT,0.00018593239941911511,79,0.0002886253365306655,81,-2
+numeric__transfer_admission,0.00017359723605165159,80,0.000182064707443706,84,-4
+categorical__admission_location_PHYSICIAN REFERRAL,0.00016257199433722204,81,0.00038509851505999027,79,2
+categorical__first_careunit_Medical Intensive Care Unit (MICU),0.00016159827767047293,82,0.00020067877661401613,83,-1
+numeric__bilirubin_total_min,0.00014322095287940068,83,0.000429719320971065,77,6
+categorical__insurance_Medicaid,6.636120017080584e-05,84,0.00020840557220719064,82,2
+numeric__missingindicator_glucose_max,0.0,85,0.0,85,0
+numeric__missingindicator_glucose_min,0.0,86,0.0,85,1
+numeric__missingindicator_glucose_first,0.0,87,0.0,85,2
+numeric__missingindicator_temperature_c_min,0.0,88,0.0,85,3
+numeric__missingindicator_map_mean,0.0,89,0.0,85,4
+numeric__missingindicator_map_max,0.0,90,0.0,85,5
+numeric__missingindicator_map_min,0.0,91,0.0,85,6
+numeric__missingindicator_sbp_mean,0.0,92,0.0,85,7
+numeric__missingindicator_sbp_max,0.0,93,0.0,85,8
+numeric__missingindicator_sbp_min,0.0,94,0.0,85,9
+numeric__albumin_max,0.0,95,0.0,85,10
+numeric__missingindicator_bun_max,0.0,96,0.0,85,11
+numeric__missingindicator_bun_min,0.0,97,0.0,85,12
+numeric__missingindicator_bun_first,0.0,98,0.0,85,13
+numeric__missingindicator_creatinine_max,0.0,99,0.0,85,14
+numeric__missingindicator_creatinine_min,0.0,100,0.0,85,15
+numeric__missingindicator_creatinine_first,0.0,101,0.0,85,16
+numeric__missingindicator_temperature_c_mean,0.0,102,0.0,85,17
+numeric__missingindicator_temperature_c_max,0.0,103,0.0,85,18
+numeric__missingindicator_wbc_min,0.0,104,0.0,85,19
+numeric__missingindicator_bicarbonate_first,0.0,105,0.0,85,20
+numeric__missingindicator_wbc_max,0.0,106,0.0,85,21
+numeric__missingindicator_wbc_first,0.0,107,0.0,85,22
+numeric__missingindicator_platelets_max,0.0,108,0.0,85,23
+categorical__admission_location_INFORMATION NOT AVAILABLE,0.0,109,0.0,85,24
+categorical__admission_location_CLINIC REFERRAL,0.0,110,0.0,85,25
+categorical__admission_type_ELECTIVE,0.0,111,0.0,85,26
+categorical__admission_type_OBSERVATION ADMIT,0.0,112,0.0,85,27
+numeric__missingindicator_hemoglobin_min,0.0,113,0.0,85,28
+numeric__missingindicator_hemoglobin_first,0.0,114,0.0,85,29
+numeric__missingindicator_hemoglobin_max,0.0,115,0.0,85,30
+categorical__admission_type_DIRECT EMER.,0.0,116,0.0,85,31
+numeric__missingindicator_bicarbonate_max,0.0,117,0.0,85,32
+numeric__missingindicator_bicarbonate_min,0.0,118,0.0,85,33
+numeric__missingindicator_platelets_min,0.0,119,0.0,85,34
+numeric__missingindicator_platelets_first,0.0,120,0.0,85,35
+categorical__admission_location_TRANSFER FROM SKILLED NURSING FACILITY,0.0,121,0.0,85,36
+categorical__admission_location_PROCEDURE SITE,0.0,122,0.0,85,37
+categorical__marital_status_DIVORCED,0.0,123,0.0,85,38
+categorical__admission_location_PACU,0.0,124,0.0,85,39
+categorical__race_HISPANIC/LATINO - PUERTO RICAN,0.0,125,0.0,85,40
+categorical__race_HISPANIC/LATINO - CUBAN,0.0,126,0.0,85,41
+categorical__race_BLACK/CAPE VERDEAN,0.0,127,0.0,85,42
+categorical__race_BLACK/AFRICAN AMERICAN,0.0,128,0.0,85,43
+categorical__marital_status_WIDOWED,0.0,129,0.0,85,44
+categorical__race_PORTUGUESE,0.0,130,0.0,85,45
+categorical__race_HISPANIC/LATINO - SALVADORAN,0.0,131,0.0,85,46
+categorical__race_OTHER,0.0,132,0.0,85,47
+categorical__race_WHITE - OTHER EUROPEAN,0.0,133,0.0,85,48
+categorical__race_UNABLE TO OBTAIN,0.0,134,0.0,85,49
+categorical__race_PATIENT DECLINED TO ANSWER,0.0,135,0.0,85,50
+categorical__first_careunit_Coronary Care Unit (CCU),0.0,136,0.0,85,51
+categorical__first_careunit_Medical/Surgical Intensive Care Unit (MICU/SICU),0.0,137,0.0,85,52
+categorical__first_careunit_Neuro Intermediate,0.0,138,0.0,85,53
+categorical__first_careunit_Neuro Surgical Intensive Care Unit (Neuro SICU),0.0,139,0.0,85,54
+categorical__first_careunit_Trauma SICU (TSICU),0.0,140,0.0,85,55

@@ -1,0 +1,5 @@
+model_family,version,threshold,auroc,auprc,accuracy,precision_ppv,recall_sensitivity,specificity,negative_predictive_value,f1_score,true_negatives,false_positives,false_negatives,true_positives,patients_flagged,flagged_percentage
+Random Forest,untuned,0.5,0.9444444444444444,0.75,0.75,0.2857142857142857,1.0,0.7222222222222222,1.0,0.4444444444444444,13,5,0,2,7,0.35
+Random Forest,tuned,0.5,0.9444444444444444,0.75,0.75,0.2857142857142857,1.0,0.7222222222222222,1.0,0.4444444444444444,13,5,0,2,7,0.35
+XGBoost,untuned,0.5,0.7222222222222222,0.26666666666666666,0.8,0.0,0.0,0.8888888888888888,0.8888888888888888,0.0,16,2,2,0,2,0.1
+XGBoost,tuned,0.5,0.7500000000000001,0.25,0.8,0.0,0.0,0.8888888888888888,0.8888888888888888,0.0,16,2,2,0,2,0.1

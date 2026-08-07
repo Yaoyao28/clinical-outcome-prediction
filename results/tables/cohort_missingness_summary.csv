@@ -1,0 +1,16 @@
+,missing_count,missing_percentage,data_type
+marital_status,10,7.81,str
+hadm_id,0,0.0,int64
+subject_id,0,0.0,int64
+intime,0,0.0,datetime64[us]
+prediction_time,0,0.0,datetime64[us]
+outtime,0,0.0,datetime64[us]
+stay_id,0,0.0,int64
+gender,0,0.0,str
+anchor_age,0,0.0,int64
+admission_location,0,0.0,str
+admission_type,0,0.0,str
+insurance,0,0.0,str
+race,0,0.0,str
+first_careunit,0,0.0,str
+hospital_expire_flag,0,0.0,int64

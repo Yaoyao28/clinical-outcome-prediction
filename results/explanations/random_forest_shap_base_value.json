@@ -1,0 +1,5 @@
+{
+  "positive_class_base_value": 0.504449438202247,
+  "maximum_additivity_error": 8.881784197001252e-16,
+  "shap_version": "0.52.0"
+}

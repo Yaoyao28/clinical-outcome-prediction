@@ -1,0 +1,9 @@
+{
+  "selected_model_name": "Tuned Random Forest",
+  "selection_dataset": "validation",
+  "primary_selection_metric": "AUPRC",
+  "secondary_selection_metric": "AUROC",
+  "validation_auprc": 0.75,
+  "validation_auroc": 0.9444444444444444,
+  "test_set_used_for_selection": false
+}

@@ -1,0 +1,40 @@
+{
+  "explained_model": "Random Forest",
+  "reason_for_uncalibrated_model": "Isotonic calibration overfit the small validation cohort and performed worse on the untouched test set.",
+  "explained_class": "hospital_expire_flag = 1",
+  "classification_threshold": 0.5,
+  "test_rows_explained": 19,
+  "transformed_feature_count": 140,
+  "positive_class_base_value": 0.504449438202247,
+  "maximum_additivity_error": 8.881784197001252e-16,
+  "top_global_features": [
+    "numeric__creatinine_min",
+    "numeric__creatinine_first",
+    "numeric__creatinine_max",
+    "numeric__icu_admission_hour",
+    "numeric__bicarbonate_first",
+    "numeric__anchor_age",
+    "numeric__bun_first",
+    "numeric__bun_max",
+    "numeric__potassium_first",
+    "numeric__lactate_first",
+    "numeric__potassium_min",
+    "numeric__bicarbonate_max",
+    "numeric__bun_min",
+    "categorical__gender_F",
+    "categorical__gender_M",
+    "numeric__map_max",
+    "numeric__lactate_max",
+    "numeric__sodium_first",
+    "numeric__platelets_first",
+    "numeric__platelets_max"
+  ],
+  "local_explanation_categories": [
+    "true_positive",
+    "false_positive",
+    "false_negative",
+    "true_negative"
+  ],
+  "shap_version": "0.52.0",
+  "warning": "SHAP describes predictive contributions and does not establish causality."
+}

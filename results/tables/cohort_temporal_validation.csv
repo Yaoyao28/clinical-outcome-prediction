@@ -1,0 +1,5 @@
+,invalid_row_count
+icu_out_before_icu_in,0
+hospital_discharge_before_admission,0
+icu_in_before_hospital_admission,2
+icu_in_after_hospital_discharge,0

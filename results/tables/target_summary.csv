@@ -1,0 +1,3 @@
+hospital_expire_flag,label,count,percentage
+0,Survived,113,88.28
+1,Died,15,11.72

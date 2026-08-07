@@ -1,0 +1,7 @@
+vital_name,total_mapped_measurements,excluded_measurements,retained_measurements
+heart_rate,3494,0.0,3494.0
+map,3642,10.0,3632.0
+respiratory_rate,3764,14.0,3750.0
+sbp,3618,0.0,3618.0
+spo2,4151,0.0,4151.0
+temperature_c,1115,0.0,1115.0
