@@ -1,6 +1,13 @@
-# Data
-data/raw/
-data/processed/
+# Data — credentialed MIMIC-IV, never commit
+/data/
+
+# Patient-level outputs — never commit once on full MIMIC-IV
+results/predictions/
+results/analysis/*.csv
+results/explanations/
+
+# Trained models — kept out of git (use MLflow / releases instead)
+models/*.joblib
 
 # Python
 __pycache__/
@@ -14,3 +21,7 @@ __pycache__/
 
 # VS Code
 .vscode/
+
+# Cloud credentials — should never be in the project folder, but just in case
+*.json.key
+service-account*.json

@@ -1,0 +1,9 @@
+metric,value
+ICU stays,128.0
+Unique patients,100.0
+Deaths,15.0
+Discharged alive / censored,113.0
+Event rate,0.1171875
+Median observed duration (days),5.719837962962963
+Minimum duration (days),0.4810300925925926
+Maximum duration (days),44.92712962962963

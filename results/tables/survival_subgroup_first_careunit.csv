@@ -1,0 +1,10 @@
+first_careunit,patients,deaths,event_rate,median_duration_days
+Cardiac Vascular Intensive Care Unit (CVICU),25,0,0.0,5.196053240740741
+Coronary Care Unit (CCU),10,3,0.3,7.426429398148148
+Medical Intensive Care Unit (MICU),25,5,0.2,3.5031828703703702
+Medical/Surgical Intensive Care Unit (MICU/SICU),22,3,0.13636363636363635,7.737517361111111
+Neuro Intermediate,1,0,0.0,0.8619675925925926
+Neuro Stepdown,1,0,0.0,8.622407407407408
+Neuro Surgical Intensive Care Unit (Neuro SICU),2,1,0.5,9.894803240740742
+Surgical Intensive Care Unit (SICU),27,2,0.07407407407407407,4.945810185185185
+Trauma SICU (TSICU),15,1,0.06666666666666667,8.4790625

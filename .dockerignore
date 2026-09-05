@@ -1,0 +1,6 @@
+notebooks/
+results/
+data/
+.git/
+.venv/
+.ipynb_checkpoints/
