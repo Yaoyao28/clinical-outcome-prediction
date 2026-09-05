@@ -1,0 +1,53 @@
+{
+  "analysis": "Time-to-event analysis of in-hospital mortality",
+  "time_origin": "ICU admission (intime)",
+  "event": "In-hospital death",
+  "event_indicator_source": "hospital_expire_flag",
+  "event_time": "deathtime",
+  "censoring": "Hospital discharge alive (dischtime)",
+  "rows_in_survival_analysis": 128,
+  "events": 15,
+  "event_rate": 0.1171875,
+  "death_time_fallback_count": 0,
+  "candidate_cox_covariates": [
+    "anchor_age",
+    "creatinine_first",
+    "bun_first",
+    "lactate_first",
+    "bicarbonate_first",
+    "potassium_first",
+    "gender_male"
+  ],
+  "selected_cox_covariates": [
+    "anchor_age",
+    "creatinine_first",
+    "bun_first"
+  ],
+  "retained_cox_covariates": [
+    "anchor_age",
+    "creatinine_first",
+    "bun_first"
+  ],
+  "cox_fit_metadata": {
+    "penalizer_fallback_used": false,
+    "unpenalized_error": null,
+    "n_rows": 128,
+    "n_events": 15
+  },
+  "ph_results": {
+    "status": "completed_without_exception",
+    "error": null
+  },
+  "limitations": [
+    "MIMIC-IV demo cohort is small.",
+    "The number of mortality events is limited.",
+    "Kaplan-Meier estimates may be unstable.",
+    "Cox hazard-ratio estimates may be unstable.",
+    "The Cox model is deliberately parsimonious.",
+    "Discharge alive is treated as censoring.",
+    "Discharge may behave as a competing event.",
+    "No causal interpretation is intended.",
+    "The analysis has not been externally validated.",
+    "The analysis is not intended for clinical use."
+  ]
+}
