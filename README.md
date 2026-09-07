@@ -1,10 +1,12 @@
 # Clinical Outcome Prediction Platform
 
-An end-to-end clinical machine learning and real-world data analytics project using the MIMIC-IV Clinical Database.
+![tests](https://github.com/Yaoyao28/clinical-outcome-prediction/actions/workflows/tests.yml/badge.svg)
 
-The current implementation predicts **in-hospital mortality using information available during the first 24 hours after ICU admission**, with emphasis on patient-level data splitting, leakage prevention, model calibration, explainability, threshold analysis, and reusable machine learning code.
+An end-to-end clinical machine learning and real-world data analytics project on the **full MIMIC-IV v3.1 Clinical Database** (85,242 first ICU stays, PhysioNet credentialed access).
 
-> **Important:** The current development version uses the MIMIC-IV Clinical Database Demo. Results are exploratory and are not intended for clinical use.
+The current implementation predicts **in-hospital mortality using information available during the first 24 hours after ICU admission**, with emphasis on patient-level data splitting, leakage prevention, honest uncertainty reporting, model calibration, explainability, threshold analysis, and reusable machine learning code.
+
+> **Important:** This project is for research, education, and portfolio demonstration only. It is not intended for clinical use.
 
 ---
 
@@ -12,27 +14,25 @@ The current implementation predicts **in-hospital mortality using information av
 
 Electronic health records contain structured information such as demographics, laboratory measurements, vital signs, admission characteristics, and ICU encounter data that can be used to develop clinical risk prediction models.
 
-This project implements a reproducible machine learning workflow for ICU outcome prediction using MIMIC-IV.
+This project implements a reproducible machine learning workflow for ICU outcome prediction using MIMIC-IV. It was first built and validated on the 100-patient MIMIC-IV demo, then rerun on the full cohort — and several modelling decisions made on the demo reversed once real sample sizes were available (see [Results](#current-results-full-mimic-iv-v31-cohort)).
 
-The current version focuses on:
+The current version covers:
 
-- ICU cohort construction
+- ICU cohort construction (SQL on BigQuery, reproducible extraction script)
 - first-24-hour feature engineering
 - leakage-safe patient-level splitting
 - preprocessing pipelines
 - baseline and tree-based machine learning models
-- grouped cross-validation
-- hyperparameter tuning
+- repeated patient-grouped cross-validation for model comparison
+- bootstrap confidence intervals on every reported metric
 - probability calibration
-- final test evaluation
+- frozen test-set evaluation
 - SHAP interpretation
 - threshold and clinical utility analysis
 - false-positive and false-negative review
 - subgroup analysis
-- reusable `src/` modules
-- automated unit testing with `pytest`
-
-The same pipeline is intended to be rerun later on the full MIMIC-IV Clinical Database.
+- survival analysis (Kaplan–Meier, log-rank, Cox)
+- reusable `src/` modules with automated `pytest` coverage and GitHub Actions CI
 
 ---
 
@@ -67,24 +67,30 @@ Only information available within the defined prediction window is used as model
 
 ## Dataset
 
-### Current development dataset
+### MIMIC-IV v3.1 (PhysioNet, credentialed access)
 
-**MIMIC-IV Clinical Database Demo**
+- `hosp` and `icu` modules, queried through Google BigQuery (`physionet-data.mimiciv_3_1_*`)
+- MIT-LCP derived tables (`mimiciv_3_1_derived`) for first-24h vitals and labs
+- Cohort: adults (≥18), first ICU stay per hospital admission
+- **85,242 ICU stays, 9,475 in-hospital deaths (11.1%)**
 
-Source: PhysioNet
-
-Core data sources include:
+Core data sources:
 
 - patient demographics
 - hospital admissions
-- ICU stays
-- laboratory measurements
+- ICU stays and care-unit information
+- laboratory measurements (chemistry, CBC, blood gas, enzymes)
 - vital signs
-- ICU care-unit information
 
-### Planned full-scale analysis
+### Data access
 
-The finalized workflow is designed to be rerun on the full **MIMIC-IV Clinical Database** after development and validation on the demo dataset.
+MIMIC-IV is a credentialed dataset. Raw data, extracted cohorts, and any patient-level outputs are excluded from version control (`data/`, `results/predictions/`, `results/explanations/`, `results/analysis/*.csv`). To reproduce:
+
+1. Obtain PhysioNet credentialed access to MIMIC-IV v3.1 and link a Google account for BigQuery.
+2. `gcloud auth application-default login`
+3. `python src/data/extract_bigquery.py` — runs `sql/05_full_cohort_bigquery.sql` and writes `data/raw/full/modeling_cohort_full.csv`.
+
+The original 100-patient demo build (`sql/01–04`, notebooks 01–10) is retained for reference.
 
 ---
 
@@ -92,39 +98,32 @@ The finalized workflow is designed to be rerun on the full **MIMIC-IV Clinical D
 
 The modeling cohort is constructed at the ICU-stay level.
 
-Key cohort design decisions include:
+Key cohort design decisions:
 
-- retain the first ICU stay for each hospital admission;
-- use one modeling observation per ICU stay;
+- retain the first ICU stay for each hospital admission; adults only;
+- one modeling observation per ICU stay;
 - preserve `subject_id`, `hadm_id`, and `stay_id` for validation and leakage control;
-- validate the binary mortality target;
-- define a first-24-hour feature window;
+- first-24-hour feature window (labs drawn up to 6 h before ICU admission are treated as admission baseline, following MIMIC convention);
 - exclude post-prediction information from model predictors;
-- maintain patient-level independence across train, validation, and test sets.
+- maintain patient-level independence across training pool and test set.
 
-SQL and Python are both used for cohort construction and feature preparation.
+Cohort and features are built in a single BigQuery SQL (`sql/05_full_cohort_bigquery.sql`): four CTEs for cohort definition and first-value labs, joined to the derived first-day vitals/labs tables.
 
 ---
 
 ## Machine Learning Workflow
 
 ```text
-MIMIC-IV Raw Data
+MIMIC-IV v3.1 (BigQuery)
         │
         ▼
-SQL Cohort Construction
+SQL Cohort + Feature Extraction  →  data/raw/full/modeling_cohort_full.csv
         │
         ▼
 Data Validation
         │
         ▼
-Exploratory Data Analysis
-        │
-        ▼
-First-24-Hour Feature Engineering
-        │
-        ▼
-Patient-Level Train / Validation / Test Split
+Patient-Level 80/20 Split  (frozen test_subject_ids.csv)
         │
         ▼
 Preprocessing Pipeline
@@ -135,86 +134,91 @@ Preprocessing Pipeline
         └── One-hot encoding
         │
         ▼
-Model Development
+Model Comparison — repeated StratifiedGroupKFold on training pool
         │
-        ├── Dummy Baseline
         ├── Logistic Regression
         ├── Random Forest
         └── XGBoost
         │
         ▼
-Grouped Cross-Validation
+Frozen Test Evaluation — bootstrap 95% CIs
         │
         ▼
-Hyperparameter Tuning
-        │
-        ▼
-Validation-Based Model Selection
-        │
-        ▼
-Probability Calibration
-        │
-        ├── Sigmoid
-        └── Isotonic
-        │
-        ▼
-Final Test Evaluation
+Calibration check
         │
         ▼
 SHAP Interpretation
         │
         ▼
-Threshold / Clinical Utility / Error Analysis
+Threshold / Clinical Utility / Error / Subgroup Analysis
+        │
+        ▼
+Survival Analysis (KM, log-rank, Cox)
 ```
 
 ---
 
 ## Models
 
-The following classification models are compared:
-
 | Model | Purpose |
 |---|---|
 | Dummy Classifier | Reference baseline |
 | Logistic Regression | Interpretable linear baseline |
 | Random Forest | Nonlinear ensemble model |
-| XGBoost | Gradient-boosted tree model |
-| Tuned Random Forest | Cross-validated RF candidate |
-| Tuned XGBoost | Cross-validated XGBoost candidate |
+| XGBoost | Gradient-boosted tree model (final model) |
 
-The primary model-selection metric is **validation AUPRC**, with AUROC used as a secondary discrimination metric.
+The primary model-selection metric is **AUROC across repeated grouped CV folds**, with AUPRC as the secondary discrimination metric and Brier score for probability quality.
 
 ---
 
-## Current Results
+## Current Results (full MIMIC-IV v3.1 cohort)
 
-### Validation model selection
+All numbers below come from the full cohort. Patients were split 80/20 at the `subject_id` level with a fixed seed; the 20% test set was frozen before any model was fitted and evaluated exactly once (notebook 08b). Confidence intervals are 95% percentile bootstrap (1,000 resamples of the test set).
 
-The Random Forest was selected based on validation performance.
+### Model comparison — repeated patient-grouped cross-validation (notebook 07b)
 
-| Model stage | AUROC | AUPRC |
+2 repeats × 3 folds of `StratifiedGroupKFold` on the 80% training pool (68,168 stays, 7,548 deaths). Values are mean ± SD across folds.
+
+| Model | AUROC | AUPRC |
 |---|---:|---:|
-| Selected Random Forest — Validation | 0.944 | 0.750 |
+| XGBoost | **0.891 ± 0.004** | **0.599 ± 0.010** |
+| Logistic Regression | 0.868 ± 0.005 | 0.542 ± 0.011 |
+| Random Forest | 0.855 ± 0.006 | 0.515 ± 0.012 |
 
-### Final test performance
+XGBoost leads by ~0.02 AUROC — roughly 5× the fold-to-fold SD, and the percentile ranges of the three models do not overlap. The gap is real, not split noise.
 
-The untouched test cohort showed substantially lower performance:
+### Final test performance (notebook 08b)
 
-| Model stage | AUROC | AUPRC |
-|---|---:|---:|
-| Random Forest — Test | 0.647 | 0.216 |
+| Model | AUROC (95% CI) | AUPRC (95% CI) | Brier (95% CI) |
+|---|---:|---:|---:|
+| **XGBoost, unweighted (final)** | **0.892 (0.884–0.899)** | **0.617 (0.596–0.637)** | **0.066 (0.063–0.068)** |
+| XGBoost, scale_pos_weight ≈ 8 | 0.890 (0.883–0.897) | 0.609 (0.589–0.630) | 0.125 (0.123–0.128) |
+| Logistic Regression, class-weighted | 0.869 (0.860–0.876) | 0.546 (0.524–0.569) | 0.143 (0.140–0.146) |
 
-This drop illustrates why an untouched test set is essential, especially when working with a very small development dataset.
+Test AUROC falls inside the cross-validation range, confirming the CV estimate was honest. For reference, the constant-rate baseline (predict 0.111 for everyone) has Brier ≈ 0.098.
 
-### Calibration findings
+### Class weighting: a demo-era decision revisited
 
-Calibration methods were evaluated using validation Brier score and log loss.
+Class re-weighting (`scale_pos_weight ≈ 8` for XGBoost, `class_weight="balanced"` for logistic regression) was introduced when the development set had 11 deaths. On the full cohort it was tested explicitly:
 
-In the small validation cohort, isotonic calibration appeared to improve calibration substantially, but it did not generalize to the test cohort.
+- **Discrimination:** unchanged (AUROC 0.890 → 0.892).
+- **Calibration:** badly harmed. The weighted model over-predicts risk everywhere — top decile predicted 0.87 vs observed 0.58 — and its Brier score (0.125) is worse than the constant-rate baseline. The unweighted model sits on the diagonal (Brier 0.066).
 
-This was treated as evidence of **calibration overfitting caused by the extremely small calibration sample**.
+![Calibration on the frozen test set](results/figures/full_test_calibration_curve.png)
 
-For downstream SHAP and threshold analysis, the project therefore retains the underlying uncalibrated Random Forest probabilities.
+With ~7,500 events the model learns the minority class without help. Weighting was dropped; the final model is the unweighted XGBoost.
+
+### What changed from the demo build
+
+| | Demo (100 patients) | Full cohort |
+|---|---|---|
+| Test set | 19 stays, 2 deaths | 17,074 stays, 1,927 deaths |
+| Best model | Random Forest (val AUROC 0.944, test 0.647) | XGBoost (test AUROC 0.892, CI ±0.007) |
+| Model ranking | RF > LR | XGB > LR > RF |
+| Class weighting | Required | Harmful — removed |
+| Post-hoc calibration | Isotonic over-fit on 2 positives | Not needed (unweighted model already calibrated) |
+
+The demo result "Random Forest wins" was split noise on two positive cases. Every modelling decision made on 89 training rows was re-examined once the full data was available, and two of them (model choice, class weighting) reversed. This is the central lesson of the project.
 
 ---
 
@@ -222,157 +226,91 @@ For downstream SHAP and threshold analysis, the project therefore retains the un
 
 ### Discrimination
 
-- AUROC
-- AUPRC
+- AUROC, AUPRC — each with 95% bootstrap CI
 
 ### Threshold-based classification
 
-- Accuracy
-- Precision / PPV
-- Recall / Sensitivity
-- Specificity
-- Negative Predictive Value
-- F1 Score
-- True Positives
-- True Negatives
-- False Positives
-- False Negatives
+- Accuracy, Precision / PPV, Recall / Sensitivity, Specificity, NPV, F1
+- Confusion-matrix counts
 
 ### Probability quality
 
-- Brier Score
-- Log Loss
-- Calibration curves
-- Mean predicted risk
-- Observed event rate
+- Brier Score, Log Loss
+- Calibration curves (quantile bins)
+- Mean predicted risk vs observed event rate
 
 ### Clinical operating characteristics
 
 - probability-threshold trade-offs
-- number of patients flagged
-- false-positive burden
-- false-negative burden
-- risk ranking
-- review-capacity analysis
-- death-capture rate
+- number of patients flagged, false-positive / false-negative burden
+- review-capacity analysis and death-capture rate
+
+### Uncertainty (`src/evaluation/resampling.py`)
+
+- `bootstrap_metric_ci` — percentile bootstrap CI for any `(y_true, y_prob) → float` metric
+- `repeated_grouped_cv` — repeated `StratifiedGroupKFold` with per-fold metrics
+- paired per-fold model differences
 
 ---
 
 ## Probability Calibration
 
-The project evaluates:
+Calibration is assessed on the frozen test set with quantile-binned reliability curves and Brier score.
 
-- uncalibrated model probabilities
-- sigmoid calibration
-- isotonic calibration
-
-Calibration is fitted using validation data only.
-
-The untouched test set is not used to select the calibration method.
-
-Because the MIMIC-IV demo cohort is extremely small, calibration estimates are unstable and are interpreted cautiously.
+Sigmoid and isotonic post-hoc calibration (`src/models/calibration.py`) remain available; they are not applied to the final model because the unweighted XGBoost is already well calibrated.
 
 ---
 
 ## Explainable AI
 
-SHAP is used to examine model behavior at both global and patient-specific levels.
-
-Analyses include:
+SHAP is used to examine model behavior at both global and patient-specific levels:
 
 - mean absolute SHAP feature importance
-- SHAP summary / beeswarm plots
-- SHAP dependence plots
+- SHAP summary / beeswarm and dependence plots
 - patient-level waterfall plots
-- comparison with Random Forest built-in feature importance
+- comparison with tree-model built-in importance
 
-Example high-ranking features in the current demo analysis include:
-
-- creatinine measurements
-- ICU admission timing
-- bicarbonate
-- age
-- BUN
-- potassium
-- lactate
-
-SHAP values are interpreted as **predictive contributions**, not causal effects.
+SHAP values are interpreted as **predictive contributions**, not causal effects. Full-cohort SHAP analysis is scheduled for the next iteration (notebook 09 currently reflects the demo build).
 
 ---
 
 ## Threshold and Clinical Utility Analysis
 
-A clinical prediction system requires a probability threshold to convert predicted risk into an actionable classification.
-
-The project evaluates multiple thresholds and examines the trade-off between:
+A clinical prediction system requires a probability threshold to convert predicted risk into an actionable classification. The project evaluates multiple thresholds and examines the trade-off:
 
 ```text
-Lower threshold
-     ↓
-Higher sensitivity
-     ↓
-Fewer missed deaths
-     ↓
-More false-positive alerts
-     ↓
-Higher clinical review burden
+Lower threshold → higher sensitivity → fewer missed deaths → more false alerts → higher review burden
+Higher threshold → lower alert burden → higher specificity → more missed deaths
 ```
 
-and
-
-```text
-Higher threshold
-     ↓
-Lower alert burden
-     ↓
-Higher specificity
-     ↓
-More missed mortality events
-```
-
-The current demo analysis shows that lower thresholds can capture more mortality events but may flag a large proportion of the cohort.
-
-Because the test cohort contains very few deaths, no threshold is presented as clinically optimal.
+Thresholds are chosen on the training pool, never on the test set. Operating points should ultimately be set by clinical review capacity rather than by a statistical optimum.
 
 ---
 
 ## Error Analysis
 
-### False negatives
+**False negatives** — deaths predicted below the operating threshold — are reviewed for predicted probability, distance from threshold, demographics, ICU characteristics, and available features.
 
-False-negative cases are reviewed because they represent mortality events with predicted probabilities below the operating threshold.
-
-The analysis examines:
-
-- predicted mortality probability
-- distance from the selected threshold
-- demographics
-- ICU characteristics
-- admission type
-- available laboratory and vital-sign features
-
-### False positives
-
-High-risk survivors are also reviewed.
-
-A false-positive prediction does not necessarily imply that the patient was clinically low risk. A patient may have been severely ill but survived after treatment, or the model may have identified high-risk physiology that was not deterministically associated with death.
+**False positives** — high-risk survivors — are also reviewed. A false positive does not imply the patient was low-risk: they may have been severely ill and survived after treatment.
 
 ---
 
 ## Subgroup Analysis
 
-Exploratory subgroup analyses are performed when data are available for:
+Exploratory subgroup analyses by sex, age group, race, insurance, ICU care unit, and admission type. Subgroup estimates are reported with sample and event counts; these analyses do **not** establish model fairness or subgroup-specific clinical validity.
 
-- sex
-- age group
-- race
-- insurance
-- ICU care unit
-- admission type
+---
 
-Because the demo test cohort is extremely small, subgroup estimates are explicitly flagged when sample size or event counts are too low for reliable interpretation.
+## Survival Analysis (notebook 11)
 
-These analyses do **not** establish model fairness or subgroup-specific clinical validity.
+Time-to-event analysis on the cohort using `lifelines`:
+
+- Kaplan–Meier curves overall and by age group / sex
+- log-rank tests
+- Cox proportional hazards with hazard-ratio forest plot
+- subgroup summaries by admission type and care unit
+
+Currently on the demo cohort; full-cohort rerun with IPTW-weighted Cox is planned (see [Planned Extensions](#planned-extensions)).
 
 ---
 
@@ -382,49 +320,29 @@ Reusable implementation code is separated from exploratory notebooks.
 
 ```text
 src/
-├── __init__.py
 ├── config.py
-│
-├── data/
-│   ├── __init__.py
-│   ├── loaders.py
-│   └── validation.py
-│
-├── features/
-│   ├── __init__.py
-│   └── preprocessing.py
-│
-├── models/
-│   ├── __init__.py
-│   ├── logistic.py
-│   ├── random_forest.py
-│   ├── xgboost_model.py
-│   └── calibration.py
-│
-├── evaluation/
-│   ├── __init__.py
-│   ├── metrics.py
-│   ├── plots.py
-│   ├── threshold.py
-│   └── subgroup.py
-│
-└── interpretation/
-    ├── __init__.py
-    ├── shap_utils.py
-    └── feature_importance.py
+├── data/          loaders.py, validation.py, extract_bigquery.py
+├── features/      preprocessing.py
+├── models/        logistic.py, random_forest.py, xgboost_model.py, calibration.py
+├── evaluation/    metrics.py, resampling.py, plots.py, threshold.py, subgroup.py
+├── interpretation/ shap_utils.py, feature_importance.py
+└── survival/      Kaplan–Meier, log-rank, Cox helpers
 ```
-
-This separates:
 
 ```text
 notebooks/  → experiments, analysis, plots, interpretation
 src/        → reusable implementation
-sql/        → cohort and feature extraction
+sql/        → cohort and feature extraction (01–04 demo/DuckDB, 05 full/BigQuery)
 tests/      → automated validation
-models/     → serialized model artifacts
-results/    → numerical and analysis outputs
-reports/    → project reports
+results/    → aggregate tables and figures (patient-level outputs git-ignored)
 ```
+
+Engineering practices:
+
+- feature-branch workflow with pull requests; GitHub Actions runs the test suite on every PR
+- `requirements.txt` (top-level deps) + `requirements.lock` (pinned versions)
+- `.dockerignore` and `.gitignore` configured to keep credentialed data and model binaries out of git and images
+- notebooks committed with outputs cleared
 
 ---
 
@@ -432,28 +350,21 @@ reports/    → project reports
 
 ```text
 clinical-outcome-prediction/
-│
-├── data/
-│   ├── raw/
-│   └── processed/
-│
+├── .github/workflows/tests.yml
+├── data/                 (git-ignored; README only)
 ├── notebooks/
-│
 ├── sql/
-│
 ├── src/
-│
 ├── tests/
-│
-├── models/
-│
+├── models/               (config JSON tracked; .joblib git-ignored)
 ├── results/
-│
+│   ├── tables/
+│   └── figures/
 ├── reports/
-│
 ├── app/
-│
 ├── requirements.txt
+├── requirements.lock
+├── .dockerignore
 ├── .gitignore
 └── README.md
 ```
@@ -462,124 +373,45 @@ clinical-outcome-prediction/
 
 ## Testing
 
-Reusable project modules are covered by automated tests using `pytest`.
-
-The test suite validates:
-
-- cohort integrity
-- binary target validation
-- unique ICU stay identifiers
-- patient-level split leakage
-- valid probability ranges
-- numerical and categorical feature inference
-- preprocessing with missing values
-- handling of unknown categorical values
-- Logistic Regression pipeline
-- Random Forest pipeline
-- AUROC / AUPRC calculations
-- probability metrics
-- threshold analysis
-- review-capacity analysis
-- subgroup analysis
-
-### Current test status
-
-```text
-21 passed
-```
-
-Run the test suite from the project root:
-
 ```bash
 python -m pytest -v
 ```
 
-On Windows using the project virtual environment:
+The suite covers cohort integrity, patient-level split leakage, preprocessing with missing and unknown values, each model pipeline, discrimination and probability metrics, threshold and review-capacity analysis, subgroup analysis, bootstrap CI behaviour (reproducibility, CI narrowing with n, single-class resamples), and repeated grouped CV (no patient split across folds).
 
-```powershell
-.\.venv\Scripts\python.exe -m pytest -v
-```
+Current status: **30 passed** on Python 3.12 (CI) and 3.14 (local).
 
 ---
 
 ## Installation
 
-Clone the repository and create a virtual environment.
-
 ```bash
-git clone <repository-url>
+git clone https://github.com/Yaoyao28/clinical-outcome-prediction.git
 cd clinical-outcome-prediction
-```
-
-Create a virtual environment:
-
-```bash
 python -m venv .venv
-```
-
-Install dependencies:
-
-```bash
-python -m pip install -r requirements.txt
-```
-
-Run tests:
-
-```bash
+# Windows: .\.venv\Scripts\Activate.ps1   |   macOS/Linux: source .venv/bin/activate
+pip install -r requirements.lock
 python -m pytest -v
 ```
+
+To pull the full cohort you additionally need PhysioNet credentials and `gcloud` (see [Data access](#data-access)).
 
 ---
 
 ## Core Dependencies
 
 ```text
-numpy
-pandas
-scipy
-scikit-learn
-xgboost
+numpy, pandas, scipy
+scikit-learn, xgboost
 shap
+lifelines
 matplotlib
 duckdb
+google-cloud-bigquery, db-dtypes
 joblib
-jupyter
-ipykernel
+jupyter, ipykernel
 pytest
 ```
-
----
-
-## Technologies
-
-### Data and analytics
-
-- Python
-- pandas
-- NumPy
-- SciPy
-- SQL
-- DuckDB
-
-### Machine learning
-
-- scikit-learn
-- XGBoost
-
-### Explainability
-
-- SHAP
-
-### Visualization
-
-- Matplotlib
-
-### Engineering
-
-- joblib
-- pytest
-- Git
-- Jupyter
 
 ---
 
@@ -587,35 +419,21 @@ pytest
 
 ### Completed
 
-- cohort construction
-- data validation
-- missingness analysis
-- first-24-hour feature engineering
-- patient-level train / validation / test split
+- full MIMIC-IV v3.1 cohort extraction (BigQuery SQL + script)
+- data validation and patient-level frozen split
 - preprocessing pipeline
-- Dummy baseline
-- Logistic Regression
-- Random Forest
-- XGBoost
-- grouped cross-validation
-- hyperparameter tuning
-- validation-based model selection
-- probability calibration
-- untouched test evaluation
-- SHAP interpretation
-- threshold analysis
-- clinical review-capacity analysis
-- false-positive analysis
-- false-negative analysis
-- subgroup analysis
-- reusable `src/` package
-- automated `pytest` test suite
+- Logistic Regression, Random Forest, XGBoost
+- repeated patient-grouped cross-validation model comparison
+- frozen test evaluation with bootstrap CIs
+- class-weighting ablation and calibration assessment
+- survival analysis notebook (demo cohort)
+- reusable `src/` package, 30 automated tests, GitHub Actions CI
 
-### Current development stage
+### In progress
 
-The core predictive modeling phase is complete.
-
-The next stage expands the project from predictive modeling into **real-world evidence and clinical trial analytics**.
+- rerun of notebooks 03–10 (SHAP, thresholds, subgroups, error analysis) on the full cohort
+- Random Forest re-tuning for the full cohort
+- severity-score baselines (SOFA / SAPS-II) from `mimiciv_3_1_derived`
 
 ---
 
@@ -623,51 +441,37 @@ The next stage expands the project from predictive modeling into **real-world ev
 
 ### Real-World Evidence / Trial Analytics
 
-- Kaplan–Meier survival analysis
-- Cox proportional hazards modeling
-- trial-style cohort builder
-- configurable inclusion / exclusion criteria
-- propensity score estimation
-- propensity score matching
-- inverse probability treatment weighting
-- standardized mean difference diagnostics
-- covariate balance / Love plots
-- observational treatment-effect analysis
+- trial-style cohort builder: inclusion/exclusion, index date, baseline and follow-up windows, attrition diagram (notebook 12)
+- propensity score estimation, matching, IPTW, AIPW; overlap and SMD / Love-plot diagnostics; sensitivity analysis (notebook 13)
+- IPTW-weighted Cox on the full cohort (notebook 11 upgrade)
 
 ### Machine Learning
 
+- temporal validation using `anchor_year_group`
+- distribution-shift / OOD detection and selective prediction (notebook 14)
 - PyTorch MLP baseline
-- full MIMIC-IV rerun
-- temporal validation
-- external validation
 
 ### Deployment
 
-- FastAPI prediction service
-- Streamlit dashboard
-- Docker
-- CI/CD
-- cloud deployment
+- FastAPI prediction service + Docker image
+- MLflow experiment tracking and model registry
+- CI/CD and cloud deployment
 
 ---
 
 ## Limitations
 
-The current implementation uses the small MIMIC-IV demo dataset.
+The full MIMIC-IV v3.1 cohort resolves the sample-size problems of the original demo build, but several limitations remain:
 
-Important limitations include:
+- **Single-centre data.** All patients come from one health system (BIDMC, Boston). Performance on other hospitals, countries, or care systems is unknown; there is no external validation.
+- **Internal evaluation only.** The frozen test set is a random 20% of patients from the same distribution. Temporal drift (MIMIC-IV spans 2008–2019) has not been assessed.
+- **Random Forest is under-tuned on the full cohort.** Its hyper-parameters (max_depth = 8, min_samples_leaf = 5) were chosen for the 89-row demo and are the likely reason it now trails logistic regression. A re-tune is planned before the final model comparison.
+- **Feature set is deliberately simple.** First-24h vitals and common labs only; no medications, procedures, ventilation status, or free text. Established severity scores (SOFA, APACHE) are not yet included as baselines.
+- **Post-hoc calibration not re-run.** The unweighted XGBoost is already well calibrated (Brier 0.066, curve on the diagonal), so the demo-era calibration step was not repeated; it remains available if a different final model is chosen.
+- **Downstream notebooks (09–11) still reflect the demo build** until the full-cohort rerun is complete.
+- **Predictive, not causal.** SHAP values and coefficients describe associations in this population and must not be read as treatment effects.
 
-- very small cohort size;
-- very few mortality events;
-- unstable validation and test estimates;
-- calibration overfitting risk;
-- unstable subgroup metrics;
-- limited generalizability;
-- internal evaluation only;
-- no external validation;
-- predictive associations should not be interpreted causally.
-
-The current model and analysis are intended for research, education, and portfolio demonstration only.
+The model and analysis are intended for research, education, and portfolio demonstration only.
 
 **This project is not intended for clinical use.**
 
@@ -675,33 +479,21 @@ The current model and analysis are intended for research, education, and portfol
 
 ## Reproducibility
 
-The project is designed so that reusable modeling logic lives in `src/`, while notebooks focus on analysis and interpretation.
-
-A clean reproducibility workflow is:
-
 ```text
-01 Data overview
+src/data/extract_bigquery.py     → data/raw/full/modeling_cohort_full.csv
         ↓
-02 Cohort construction
+03b  Full-cohort sanity check
         ↓
-03 Patient split / missingness
+07b  Repeated grouped CV model comparison   (writes test_subject_ids.csv)
         ↓
-04 Feature engineering
+08b  Frozen test evaluation + bootstrap CIs + calibration
         ↓
-05 Preprocessing
+09–10  SHAP, thresholds, subgroups, errors   (full-cohort rerun in progress)
         ↓
-06 Baseline + Logistic Regression
-        ↓
-07 Tree models + model selection
-        ↓
-08 Calibration + final evaluation
-        ↓
-09 SHAP interpretation
-        ↓
-10 Threshold + subgroup + error analysis
+11   Survival analysis
 ```
 
-Before publishing a release, all notebooks should be restarted and rerun from a clean kernel and the complete test suite should pass.
+Before publishing a release, all notebooks should be restarted and rerun from a clean kernel with outputs cleared, and the complete test suite should pass.
 
 ---
 
@@ -711,4 +503,4 @@ The long-term goal is to evolve this repository from an ICU mortality prediction
 
 > **Real-World Clinical Outcome Prediction and Treatment Effect Analysis Platform**
 
-The predictive modeling workflow will serve as the foundation for survival analysis, trial-style cohort construction, and observational causal inference using MIMIC-IV.
+The predictive modeling workflow serves as the foundation for survival analysis, trial-style cohort construction, and observational causal inference using MIMIC-IV.
