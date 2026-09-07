@@ -32,3 +32,8 @@ db-dtypes
 
 # Survival analysis
 lifelines
+
+# API / deployment
+fastapi
+uvicorn[standard]
+httpx
