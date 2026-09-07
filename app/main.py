@@ -61,7 +61,12 @@ def _risk_tier(probability: float) -> str:
             return label
     return "high"
 
+@app.get("/")
+def root():
+    return {"message": "ICU Mortality Risk API", "docs": "/docs", "health": "/health"}
 
+
+    
 @app.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
     return HealthResponse(
