@@ -66,3 +66,8 @@ class HealthResponse(BaseModel):
     model_version: str
     n_features: int
     test_auroc: float
+    model_source: str = Field(
+        ...,
+        description="Where the served model was loaded from: a local artifact path "
+        "or an MLflow model URI such as models:/icu-mortality-xgboost/3.",
+    )

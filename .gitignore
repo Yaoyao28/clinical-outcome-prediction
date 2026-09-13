@@ -25,3 +25,7 @@ __pycache__/
 # Cloud credentials — should never be in the project folder, but just in case
 *.json.key
 service-account*.json
+
+# MLflow local backend
+mlruns/
+mlflow.db

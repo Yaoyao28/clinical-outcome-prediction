@@ -8,7 +8,9 @@ Then open http://127.0.0.1:8000/docs for the interactive Swagger UI.
 
 from __future__ import annotations
 
+import os
 from contextlib import asynccontextmanager
+
 import joblib
 import pandas as pd
 from fastapi import FastAPI, HTTPException
@@ -28,15 +30,36 @@ RISK_TIERS = [(0.10, "low"), (0.30, "moderate"), (1.01, "high")]
 state: dict = {}
 
 
+def _load_model() -> tuple[object, str]:
+    """Load the model, preferring an MLflow registry version if one is configured.
+
+    Set MLFLOW_MODEL_URI (e.g. "models:/icu-mortality-xgboost/3") to serve a
+    specific registered version; MLFLOW_TRACKING_URI points at the backend. With
+    neither set, the local joblib artifact baked into the image is used — that is
+    what the container does, so the image stays self-contained and needs no
+    network at startup.
+
+    Returns the loaded pipeline and a short string naming where it came from,
+    which /health reports so a running service can always be traced to a model.
+    """
+    model_uri = os.environ.get("MLFLOW_MODEL_URI")
+    if model_uri:
+        import mlflow.sklearn  # imported only when actually used
+
+        return mlflow.sklearn.load_model(model_uri), model_uri
+
+    if not PIPELINE_PATH.exists():
+        raise RuntimeError(
+            f"Model artifact not found at {PIPELINE_PATH} and MLFLOW_MODEL_URI is unset. "
+            "Run `python -m src.models.train_final` first."
+        )
+    return joblib.load(PIPELINE_PATH), str(PIPELINE_PATH)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Load the model once at startup, not per request."""
-    if not PIPELINE_PATH.exists():
-        raise RuntimeError(
-            f"Model artifact not found at {PIPELINE_PATH}. "
-            "Run `python -m src.models.train_final` first."
-        )
-    state["pipeline"] = joblib.load(PIPELINE_PATH)
+    state["pipeline"], state["model_source"] = _load_model()
     state["feature_order"] = (
         FEATURE_CONFIG["numeric_features"] + FEATURE_CONFIG["categorical_features"]
     )
@@ -61,12 +84,7 @@ def _risk_tier(probability: float) -> str:
             return label
     return "high"
 
-@app.get("/")
-def root():
-    return {"message": "ICU Mortality Risk API", "docs": "/docs", "health": "/health"}
 
-
-    
 @app.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
     return HealthResponse(
@@ -75,6 +93,7 @@ def health() -> HealthResponse:
         model_version=FEATURE_CONFIG["model_version"],
         n_features=len(state.get("feature_order", [])),
         test_auroc=FEATURE_CONFIG["test_auroc"],
+        model_source=state.get("model_source", "not_loaded"),
     )
 
 

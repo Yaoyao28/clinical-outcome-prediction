@@ -37,3 +37,6 @@ lifelines
 fastapi
 uvicorn[standard]
 httpx
+
+# Experiment tracking
+mlflow
