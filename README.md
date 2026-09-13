@@ -4,7 +4,7 @@
 
 An end-to-end clinical machine learning and real-world data analytics project on the **full MIMIC-IV v3.1 Clinical Database** (85,242 first ICU stays, PhysioNet credentialed access).
 
-The current implementation predicts **in-hospital mortality using information available during the first 24 hours after ICU admission**, with emphasis on patient-level data splitting, leakage prevention, honest uncertainty reporting, model calibration, explainability, threshold analysis, and reusable machine learning code.
+The current implementation predicts **in-hospital mortality using information available during the first 24 hours after ICU admission**, with emphasis on patient-level data splitting, leakage prevention, honest uncertainty reporting, model calibration, explainability, threshold analysis, reusable machine learning code, and a containerized prediction service deployed on AWS.
 
 > **Important:** This project is for research, education, and portfolio demonstration only. It is not intended for clinical use.
 
@@ -32,6 +32,7 @@ The current version covers:
 - false-positive and false-negative review
 - subgroup analysis
 - survival analysis (Kaplan–Meier, log-rank, Cox)
+- a FastAPI prediction service, Docker image, and AWS deployment
 - reusable `src/` modules with automated `pytest` coverage and GitHub Actions CI
 
 ---
@@ -154,6 +155,9 @@ Threshold / Clinical Utility / Error / Subgroup Analysis
         │
         ▼
 Survival Analysis (KM, log-rank, Cox)
+        │
+        ▼
+FastAPI service → Docker image → Amazon ECR → Amazon ECS
 ```
 
 ---
@@ -310,7 +314,90 @@ Time-to-event analysis on the cohort using `lifelines`:
 - Cox proportional hazards with hazard-ratio forest plot
 - subgroup summaries by admission type and care unit
 
-Currently on the demo cohort; full-cohort rerun with IPTW-weighted Cox is planned (see [Planned Extensions](#planned-extensions)).
+Currently on the demo cohort; a full-cohort rerun with a Random Survival Forest comparison and IPTW-weighted Cox is planned (see [Planned Extensions](#planned-extensions)).
+
+---
+
+## Deployment
+
+The final model is served as a containerized FastAPI application and has been deployed end-to-end on AWS.
+
+### Local
+
+```bash
+python -m src.models.train_final          # fit the final model → models/
+docker build -t icu-mortality-api .
+docker run --rm -p 8000:8000 icu-mortality-api
+curl http://localhost:8000/health
+```
+
+Interactive API docs at `http://localhost:8000/docs`.
+
+### Endpoints
+
+| Method | Path | Returns |
+|---|---|---|
+| `GET` | `/health` | model name, version, feature count, test AUROC |
+| `POST` | `/predict` | mortality probability, risk tier, features provided / missing |
+
+```bash
+curl -X POST http://localhost:8000/predict \
+  -H 'Content-Type: application/json' \
+  -d '{"anchor_age": 82, "lactate_first": 6.5, "creatinine_first": 3.1,
+       "map_min": 52, "gender": "M", "admission_type": "EW EMER."}'
+```
+
+```json
+{"mortality_probability": 0.4994, "risk_tier": "high",
+ "model_name": "xgboost_unweighted", "model_version": "20260907",
+ "n_features_provided": 6, "n_features_missing": 60}
+```
+
+Design notes:
+
+- Every feature is optional. An unmeasured lab is legitimate clinical input and is imputed by the fitted pipeline; the response reports how many features were actually supplied.
+- The request schema is generated at import time from `models/final_feature_config.json`, so the API cannot drift from the feature set the model was trained on. Unknown fields are rejected with a 422.
+- The model is loaded once at startup (FastAPI `lifespan`), not per request.
+- `MODEL_DIR` is read from the environment, so the same image runs locally, in tests, and in the cloud without code changes.
+
+### AWS
+
+The image is pushed to **Amazon ECR** and deployed with **Amazon ECS Express Mode** (Fargate + Application Load Balancer + ACM certificate), container port 8000, health check on `/health`, 0.5 vCPU / 1 GB. Both endpoints were verified over the public HTTPS endpoint.
+
+![Prediction via the deployed HTTPS endpoint](docs/images/predict-response.png)
+
+Express Mode provisions standard, inspectable ECS resources — load balancer, listener and rules, target groups, security groups, scaling target and policy, and a rollback alarm — rather than a managed black box. The service is torn down between demos, since the load balancer bills hourly regardless of traffic, and redeployed from the ECR image when needed.
+
+<details>
+<summary><b>Redeploy runbook</b></summary>
+
+Rebuild and push only if the image changed:
+
+```bash
+docker build -t icu-mortality-api .
+aws ecr get-login-password --region us-east-1 | docker login --username AWS \
+  --password-stdin <ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com
+docker tag icu-mortality-api:latest <ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/icu-mortality-api:latest
+docker push <ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/icu-mortality-api:latest
+```
+
+Then, in the ECS console → **Express Mode**:
+
+| Field | Value |
+|---|---|
+| Image URI | Browse ECR images → `icu-mortality-api` → tag `latest` |
+| Task execution role | `ecsTaskExecutionRole` |
+| Infrastructure role | `ecsInfrastructureRoleForExpressServices` |
+| Name | `icu-mortality-api` |
+| Container port | **8000** |
+| Health check path | **/health** |
+| CPU / Memory | 0.5 vCPU / 1 GB |
+
+Deployment takes 5–10 minutes; the Application URL appears on the service overview page. Check `<url>/health`, then `<url>/docs`. **Delete the service when finished.**
+
+One-time account setup: an IAM user with ECR and ECS permissions, the ECS service-linked role (`aws iam create-service-linked-role --aws-service-name ecs.amazonaws.com`), and an account on the paid plan — Express Mode is not available on the AWS free plan. A monthly cost budget alert is recommended.
+
+</details>
 
 ---
 
@@ -321,17 +408,22 @@ Reusable implementation code is separated from exploratory notebooks.
 ```text
 src/
 ├── config.py
-├── data/          loaders.py, validation.py, extract_bigquery.py
-├── features/      preprocessing.py
-├── models/        logistic.py, random_forest.py, xgboost_model.py, calibration.py
-├── evaluation/    metrics.py, resampling.py, plots.py, threshold.py, subgroup.py
+├── data/           loaders.py, validation.py, extract_bigquery.py
+├── features/       preprocessing.py
+├── models/         logistic.py, random_forest.py, xgboost_model.py, calibration.py, train_final.py
+├── evaluation/     metrics.py, resampling.py, plots.py, threshold.py, subgroup.py
 ├── interpretation/ shap_utils.py, feature_importance.py
-└── survival/      Kaplan–Meier, log-rank, Cox helpers
+└── survival/       Kaplan–Meier, log-rank, Cox helpers
+
+app/
+├── main.py         FastAPI service (/health, /predict); model loaded at startup
+└── schemas.py      pydantic schemas generated from the saved feature config
 ```
 
 ```text
 notebooks/  → experiments, analysis, plots, interpretation
 src/        → reusable implementation
+app/        → inference service
 sql/        → cohort and feature extraction (01–04 demo/DuckDB, 05 full/BigQuery)
 tests/      → automated validation
 results/    → aggregate tables and figures (patient-level outputs git-ignored)
@@ -340,8 +432,10 @@ results/    → aggregate tables and figures (patient-level outputs git-ignored)
 Engineering practices:
 
 - feature-branch workflow with pull requests; GitHub Actions runs the test suite on every PR
-- `requirements.txt` (top-level deps) + `requirements.lock` (pinned versions)
-- `.dockerignore` and `.gitignore` configured to keep credentialed data and model binaries out of git and images
+- `requirements.txt` (top-level deps), `requirements.lock` (full pinned environment), and `requirements-api.txt` (pinned inference-only deps used by the image)
+- inference image built from `python:3.12-slim` at **475 MB** — down from ~3 GB when the full notebook dependency set was installed — with layer ordering chosen so dependency installation stays cached across code changes
+- pinning inference dependencies also keeps the serialized model loadable: an unpinned build pulled a different XGBoost version and produced an unpickling warning
+- `.dockerignore` and `.gitignore` keep credentialed data and model binaries out of both git and the image
 - notebooks committed with outputs cleared
 
 ---
@@ -351,20 +445,23 @@ Engineering practices:
 ```text
 clinical-outcome-prediction/
 ├── .github/workflows/tests.yml
-├── data/                 (git-ignored; README only)
+├── app/                    FastAPI service
+├── data/                   (git-ignored; README only)
+├── docs/images/
 ├── notebooks/
 ├── sql/
 ├── src/
 ├── tests/
-├── models/               (config JSON tracked; .joblib git-ignored)
+├── models/                 (config JSON tracked; .joblib git-ignored)
 ├── results/
 │   ├── tables/
 │   └── figures/
 ├── reports/
-├── app/
-├── requirements.txt
-├── requirements.lock
+├── Dockerfile
 ├── .dockerignore
+├── requirements.txt
+├── requirements-api.txt
+├── requirements.lock
 ├── .gitignore
 └── README.md
 ```
@@ -377,9 +474,11 @@ clinical-outcome-prediction/
 python -m pytest -v
 ```
 
-The suite covers cohort integrity, patient-level split leakage, preprocessing with missing and unknown values, each model pipeline, discrimination and probability metrics, threshold and review-capacity analysis, subgroup analysis, bootstrap CI behaviour (reproducibility, CI narrowing with n, single-class resamples), and repeated grouped CV (no patient split across folds).
+The suite covers cohort integrity, patient-level split leakage, preprocessing with missing and unknown values, each model pipeline, discrimination and probability metrics, threshold and review-capacity analysis, subgroup analysis, bootstrap CI behaviour (reproducibility, CI narrowing with n, single-class resamples), repeated grouped CV (no patient split across folds), and the API endpoints (health, prediction with and without missing features, rejection of unknown fields and wrong types).
 
-Current status: **30 passed** on Python 3.12 (CI) and 3.14 (local).
+The API tests build a throwaway model on synthetic data, so the whole suite runs without any MIMIC artifact — including in CI.
+
+Current status: **35 passed** on Python 3.12 (CI) and 3.14 (local).
 
 ---
 
@@ -408,6 +507,7 @@ lifelines
 matplotlib
 duckdb
 google-cloud-bigquery, db-dtypes
+fastapi, uvicorn, httpx
 joblib
 jupyter, ipykernel
 pytest
@@ -419,7 +519,7 @@ pytest
 
 ### Completed
 
-- full MIMIC-IV v3.1 cohort extraction (BigQuery SQL + script)
+- full MIMIC-IV v3.1 cohort extraction (BigQuery SQL + reproducible script)
 - data validation and patient-level frozen split
 - preprocessing pipeline
 - Logistic Regression, Random Forest, XGBoost
@@ -427,7 +527,8 @@ pytest
 - frozen test evaluation with bootstrap CIs
 - class-weighting ablation and calibration assessment
 - survival analysis notebook (demo cohort)
-- reusable `src/` package, 30 automated tests, GitHub Actions CI
+- FastAPI prediction service, Docker image, and AWS deployment (ECR + ECS Express Mode)
+- reusable `src/` package, 35 automated tests, GitHub Actions CI
 
 ### In progress
 
@@ -441,21 +542,23 @@ pytest
 
 ### Real-World Evidence / Trial Analytics
 
-- trial-style cohort builder: inclusion/exclusion, index date, baseline and follow-up windows, attrition diagram (notebook 12)
-- propensity score estimation, matching, IPTW, AIPW; overlap and SMD / Love-plot diagnostics; sensitivity analysis (notebook 13)
-- IPTW-weighted Cox on the full cohort (notebook 11 upgrade)
+- trial-style cohort builder: inclusion/exclusion criteria, index date, baseline and follow-up windows, attrition diagram
+- propensity score estimation, matching, IPTW, AIPW; overlap and SMD / Love-plot diagnostics; sensitivity analysis
+- IPTW-weighted Cox on the full cohort
 
 ### Machine Learning
 
+- Random Survival Forest vs Cox, with C-index, time-dependent AUC, and integrated Brier score
+- PyTorch MLP baseline and a multimodal model combining tabular features with clinical-text embeddings
 - temporal validation using `anchor_year_group`
-- distribution-shift / OOD detection and selective prediction (notebook 14)
-- PyTorch MLP baseline
+- distribution-shift / OOD detection and selective prediction
 
-### Deployment
+### Deployment and MLOps
 
-- FastAPI prediction service + Docker image
-- MLflow experiment tracking and model registry
-- CI/CD and cloud deployment
+- MLflow experiment tracking and model registry; the API loads the model by registry version
+- Postgres-backed feature storage and a `GET /predict/{stay_id}` endpoint
+- CI/CD: build and push the image on merge to `main`
+- prediction logging and drift monitoring
 
 ---
 
@@ -468,6 +571,7 @@ The full MIMIC-IV v3.1 cohort resolves the sample-size problems of the original 
 - **Random Forest is under-tuned on the full cohort.** Its hyper-parameters (max_depth = 8, min_samples_leaf = 5) were chosen for the 89-row demo and are the likely reason it now trails logistic regression. A re-tune is planned before the final model comparison.
 - **Feature set is deliberately simple.** First-24h vitals and common labs only; no medications, procedures, ventilation status, or free text. Established severity scores (SOFA, APACHE) are not yet included as baselines.
 - **Post-hoc calibration not re-run.** The unweighted XGBoost is already well calibrated (Brier 0.066, curve on the diagonal), so the demo-era calibration step was not repeated; it remains available if a different final model is chosen.
+- **The deployed service has no authentication or request logging.** It is a demonstration endpoint, brought up and torn down for specific demos, not a production service.
 - **Downstream notebooks (09–11) still reflect the demo build** until the full-cohort rerun is complete.
 - **Predictive, not causal.** SHAP values and coefficients describe associations in this population and must not be read as treatment effects.
 
@@ -491,6 +595,11 @@ src/data/extract_bigquery.py     → data/raw/full/modeling_cohort_full.csv
 09–10  SHAP, thresholds, subgroups, errors   (full-cohort rerun in progress)
         ↓
 11   Survival analysis
+        ↓
+src/models/train_final.py        → models/final_xgboost_pipeline.joblib
+                                   models/final_feature_config.json
+        ↓
+Dockerfile → Amazon ECR → Amazon ECS
 ```
 
 Before publishing a release, all notebooks should be restarted and rerun from a clean kernel with outputs cleared, and the complete test suite should pass.
