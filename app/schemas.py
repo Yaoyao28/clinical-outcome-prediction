@@ -60,6 +60,12 @@ class PredictionResponse(BaseModel):
     n_features_missing: int
 
 
+class StayPredictionResponse(PredictionResponse):
+    """Same payload as /predict, plus the identifier that was scored."""
+
+    stay_id: int
+
+
 class HealthResponse(BaseModel):
     status: str
     model_name: str
@@ -70,4 +76,9 @@ class HealthResponse(BaseModel):
         ...,
         description="Where the served model was loaded from: a local artifact path "
         "or an MLflow model URI such as models:/icu-mortality-xgboost/3.",
+    )
+    feature_store: str = Field(
+        "not_configured",
+        description="not_configured / connected / unreachable — whether "
+        "GET /predict/{stay_id} can serve requests.",
     )
