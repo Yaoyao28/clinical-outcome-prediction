@@ -40,3 +40,7 @@ httpx
 
 # Experiment tracking
 mlflow
+
+# Feature store
+sqlalchemy
+psycopg2-binary

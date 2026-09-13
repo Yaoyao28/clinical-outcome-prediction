@@ -1,0 +1,38 @@
+# Local stack: Postgres feature store + the prediction API.
+#
+#   docker compose up -d db     # database only (for loading the cohort)
+#   docker compose up --build   # database + API
+#   docker compose down         # stop;  add -v to also delete the data volume
+#
+# Postgres is bound to 127.0.0.1 so the credentialed cohort is not exposed on
+# the local network. The volume lives in Docker, outside the repository.
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: icu
+      POSTGRES_PASSWORD: icu
+      POSTGRES_DB: icu
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U icu -d icu"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    environment:
+      DATABASE_URL: postgresql+psycopg2://icu:icu@db:5432/icu
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
