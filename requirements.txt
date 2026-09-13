@@ -44,3 +44,7 @@ mlflow
 # Feature store
 sqlalchemy
 psycopg2-binary
+
+# Deep learning / NLP
+torch
+transformers
