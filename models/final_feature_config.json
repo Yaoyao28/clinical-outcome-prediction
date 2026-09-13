@@ -1,11 +1,14 @@
 {
   "model_name": "xgboost_unweighted",
-  "model_version": "20260907",
+  "model_version": "20260913",
   "trained_on": "MIMIC-IV v3.1, first ICU stay, adults",
   "n_train_rows": 68168,
   "n_train_positives": 7548,
+  "n_test_rows": 17074,
+  "n_test_positives": 1927,
   "test_auroc": 0.8916,
   "test_auprc": 0.6167,
+  "test_brier": 0.0655,
   "numeric_features": [
     "anchor_age",
     "icu_admission_hour",
